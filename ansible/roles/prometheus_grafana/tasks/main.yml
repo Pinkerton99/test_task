@@ -1,0 +1,41 @@
+- name: Create monitoring directories
+  file:
+    path: "{{ item }}"
+    state: directory
+  loop:
+    - /home/vagrant/monitoring
+    - /home/vagrant/monitoring/prometheus
+    - /home/vagrant/monitoring/grafana
+    - /home/vagrant/monitoring/grafana/provisioning
+    - /home/vagrant/monitoring/grafana/provisioning/datasources
+    - /home/vagrant/monitoring/grafana/provisioning/dashboards
+
+- name: Create docker-compose file
+  template:
+    src: docker-compose.yml.j2
+    dest: /home/vagrant/monitoring/docker-compose.yml
+
+- name: Create prometheus.yml
+  template:
+    src: prometheus.yml.j2
+    dest: /home/vagrant/monitoring/prometheus/prometheus.yml
+
+- name: Create datasource config for grafana
+  template:
+    src: datasource.yml.j2
+    dest: /home/vagrant/monitoring/grafana/provisioning/datasources/datasource.yml
+
+- name: Create dashboards config for grafana
+  template:
+    src: dashboards.yml.j2
+    dest: /home/vagrant/monitoring/grafana/provisioning/dashboards/dashboards.yml
+
+- name: Upload dashboard JSON
+  copy:
+    src: node_exporter_full.json
+    dest: /home/vagrant/monitoring/grafana/provisioning/dashboards/node_exporter_full.json
+
+- name: Run docker-compose up
+  command: "docker-compose -f /home/vagrant/monitoring/docker-compose.yml up -d"
+  args:
+    chdir: /home/vagrant/monitoring

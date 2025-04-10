@@ -1,0 +1,57 @@
+- name: Install chrony for time synchronization
+  apt:
+    name: chrony
+    state: present
+
+- name: Enable and start chrony service
+  systemd:
+    name: chrony
+    enabled: yes
+    state: started
+        
+- name: Download Node Exporter
+  get_url:
+    url: "https://github.com/prometheus/node_exporter/releases/download/v1.9.1/node_exporter-1.9.1.linux-amd64.tar.gz"
+    dest: "/tmp/node_exporter.tar.gz"
+
+- name: Extract Node Exporter
+  ansible.builtin.unarchive:
+    src: "/tmp/node_exporter.tar.gz"
+    dest: "/usr/local/bin/"
+    remote_src: yes
+
+- name: Rename extracted file
+  command: mv /usr/local/bin/node_exporter-1.9.1.linux-amd64/node_exporter /usr/local/bin/
+
+- name: Remove extracted directory
+  file:
+    path: /usr/local/bin/node_exporter-1.9.1.linux-amd64
+    state: absent
+
+- name: Create Node Exporter user
+  user:
+    name: node_exporter
+    system: yes
+    shell: /bin/false
+
+- name: Set owner in derectory
+  file:
+    path: "/usr/local/bin/node_exporter"
+    owner: node_exporter
+    group: node_exporter
+    state: file
+
+- name: Create Node Exporter systemd service
+  template:
+    src: node_exporter.service.j2
+    dest: /etc/systemd/system/node_exporter.service
+
+- name: Reload systemd to read the new service
+  systemd:
+    daemon_reload: yes
+
+- name: Enable and start Node Exporter service
+  systemd:
+    name: node_exporter
+    enabled: yes
+    state: started

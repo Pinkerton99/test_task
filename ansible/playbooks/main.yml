@@ -1,0 +1,8 @@
+- name: Install Docker & Node Exporter & Prometheus & Grafana
+  hosts: local
+  become: yes
+  roles:
+    - node_exporter
+    - docker
+    - prometheus_grafana
+    
